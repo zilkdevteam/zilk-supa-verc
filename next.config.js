@@ -10,12 +10,6 @@ const nextConfig = {
     'react-native-safe-area-context',
     'react-native-screens',
   ],
-  experimental: {
-    appDir: true,
-  },
-  compiler: {
-    styledComponents: true,
-  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
