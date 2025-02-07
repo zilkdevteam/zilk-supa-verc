@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-export default function Navigation() {
+export function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -165,4 +165,6 @@ export default function Navigation() {
       )}
     </nav>
   );
-} 
+}
+
+export default Navigation; 
