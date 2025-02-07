@@ -89,9 +89,9 @@ export default function DealsPage() {
         const transformedDeals = (data || []).map(deal => ({
           ...deal,
           businesses: {
-            name: deal.businesses.name,
-            address: deal.businesses.address,
-            location: deal.businesses.location
+            name: deal.businesses?.[0]?.name || '',
+            address: deal.businesses?.[0]?.address || '',
+            location: deal.businesses?.[0]?.location || ''
           }
         }));
 
