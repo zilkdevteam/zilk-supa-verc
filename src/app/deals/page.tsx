@@ -247,12 +247,22 @@ export default function DealsPage() {
 
                     {userLocation && deal.businesses.location && (
                       <div className="mt-4 text-sm text-retro-muted">
-                        {calculateDistance(
-                          userLocation.latitude,
-                          userLocation.longitude,
-                          deal.businesses.location.latitude,
-                          deal.businesses.location.longitude
-                        ).toFixed(1)} miles away
+                        {(() => {
+                          const getCoordinates = (locationString: string) => {
+                            const match = locationString.match(/POINT\((.+) (.+)\)/);
+                            return match ? { longitude: parseFloat(match[1]), latitude: parseFloat(match[2]) } : null;
+                          };
+                          
+                          const location = getCoordinates(deal.businesses.location);
+                          if (!location) return null;
+                          
+                          return calculateDistance(
+                            userLocation.latitude,
+                            userLocation.longitude,
+                            location.latitude,
+                            location.longitude
+                          ).toFixed(1);
+                        })()} miles away
                       </div>
                     )}
                   </div>
