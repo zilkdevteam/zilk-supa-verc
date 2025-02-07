@@ -106,16 +106,16 @@ export function Navigation() {
           <div className="flex items-center sm:hidden">
             <button
               type="button"
-              className="inline-flex items-center justify-center p-2 rounded-lg text-retro-muted 
+              className="inline-flex items-center justify-center p-3 rounded-lg text-retro-muted 
                          hover:text-retro-dark hover:bg-retro-accent/10
                          focus:outline-none focus:ring-2 focus:ring-inset focus:ring-retro-accent"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <span className="sr-only">Open main menu</span>
               {isMobileMenuOpen ? (
-                <X className="block h-6 w-6" aria-hidden="true" />
+                <X className="block h-7 w-7" aria-hidden="true" />
               ) : (
-                <Menu className="block h-6 w-6" aria-hidden="true" />
+                <Menu className="block h-7 w-7" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -124,13 +124,13 @@ export function Navigation() {
 
       {/* Mobile menu */}
       {isMobileMenuOpen && (
-        <div className="sm:hidden border-t-2 border-retro-accent/20 bg-retro-accent/10">
-          <div className="px-2 pt-2 pb-3 space-y-1">
+        <div className="sm:hidden border-t-2 border-retro-accent/20 bg-white">
+          <div className="px-4 pt-2 pb-3 space-y-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`block px-3 py-2 rounded-lg text-base font-medium ${
+                className={`block px-4 py-3 rounded-lg text-base font-medium ${
                   isActive(link.href)
                     ? 'bg-retro-accent/10 text-retro-primary font-bold'
                     : 'text-retro-primary font-bold hover:text-retro-primary/80 hover:bg-retro-accent/10'
@@ -140,20 +140,20 @@ export function Navigation() {
                 {link.label}
               </Link>
             ))}
-            <div className="px-3 py-2">
+            <div className="px-3 py-3">
               {loading ? (
-                <div className="w-full h-10 bg-retro-dark-700/10 animate-pulse rounded-lg"></div>
+                <div className="w-full h-12 bg-retro-dark-700/10 animate-pulse rounded-lg"></div>
               ) : isAuthenticated ? (
                 <button
                   onClick={handleSignOut}
-                  className="w-full btn-secondary"
+                  className="w-full btn-secondary py-3"
                 >
                   Sign Out
                 </button>
               ) : (
                 <Link
                   href="/auth"
-                  className="block w-full btn-primary text-center"
+                  className="block w-full btn-primary py-3 text-center"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign In

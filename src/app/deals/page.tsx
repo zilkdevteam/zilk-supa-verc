@@ -6,6 +6,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MapPin, Calendar, Compass } from 'lucide-react';
 import Link from 'next/link';
+import Footer from '@/components/Footer';
 
 interface Deal {
   id: string;
@@ -190,9 +191,9 @@ export default function DealsPage() {
   }, [deals, filters, userLocation]);
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Navigation />
-      <main className="min-h-screen bg-retro-light py-12">
+      <main className="flex-grow bg-retro-light py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col space-y-8">
             <div className="flex justify-between items-center">
@@ -272,6 +273,7 @@ export default function DealsPage() {
           </div>
         </div>
       </main>
-    </>
+      <Footer />
+    </div>
   );
 } 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Navigation from '@/components/Navigation';
 import BusinessNavigation from '@/components/BusinessNavigation';
+import Footer from '@/components/Footer';
 
 export default function BusinessLayout({
   children,
@@ -57,10 +58,11 @@ export default function BusinessLayout({
   }
 
   return (
-    <div className="min-h-screen bg-retro-light">
+    <div className="min-h-screen bg-retro-light flex flex-col">
       <Navigation />
       <BusinessNavigation />
-      <main className="py-8">{children}</main>
+      <main className="py-8 flex-grow">{children}</main>
+      <Footer />
     </div>
   );
 } 

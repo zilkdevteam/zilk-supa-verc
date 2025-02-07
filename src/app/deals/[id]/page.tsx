@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import Navigation from '@/components/Navigation';
 import { MapPin, Calendar, Compass } from 'lucide-react';
 import Link from 'next/link';
+import Footer from '@/components/Footer';
 
 export default function DealPage() {
   const params = useParams();
@@ -44,33 +45,35 @@ export default function DealPage() {
 
   if (loading) {
     return (
-      <>
+      <div className="min-h-screen flex flex-col">
         <Navigation />
-        <div className="flex items-center justify-center min-h-screen bg-retro-light">
+        <div className="flex-grow flex items-center justify-center bg-retro-light">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-retro-accent"></div>
         </div>
-      </>
+        <Footer />
+      </div>
     );
   }
 
   if (error || !deal) {
     return (
-      <>
+      <div className="min-h-screen flex flex-col">
         <Navigation />
-        <div className="flex items-center justify-center min-h-screen bg-retro-light">
+        <div className="flex-grow flex items-center justify-center bg-retro-light">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-red-600">Error Loading Deal</h2>
             <p className="mt-2 text-retro-muted">{error}</p>
           </div>
         </div>
-      </>
+        <Footer />
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Navigation />
-      <main className="min-h-screen bg-retro-light py-12">
+      <main className="flex-grow bg-retro-light py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="card">
             <div className="flex flex-col space-y-6">
@@ -117,6 +120,7 @@ export default function DealPage() {
           </div>
         </div>
       </main>
-    </>
+      <Footer />
+    </div>
   );
 } 
