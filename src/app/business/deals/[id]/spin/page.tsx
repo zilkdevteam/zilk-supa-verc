@@ -130,7 +130,6 @@ export default function SpinPage() {
         router.push('/auth');
         return;
       }
-
       // Calculate random rotation (ensure it spins at least 5 times)
       const minSpins = 5;
       const extraSpins = Math.floor(Math.random() * 3); // 0-2 extra spins
