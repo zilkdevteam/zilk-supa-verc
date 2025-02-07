@@ -2,12 +2,13 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { createClient } from '@supabase/supabase-js'
 import { Analytics } from '@/components/Analytics'
+import CookieConsent from '@/components/CookieConsent'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'Zilk - Local Deals & Rewards',
-  description: 'Discover amazing local deals and spin to win exclusive rewards!',
+  description: 'Discover amazing local deals with our innovative spin-to-win platform.',
 }
 
 export default function RootLayout({
@@ -22,6 +23,7 @@ export default function RootLayout({
           {children}
         </div>
         <Analytics />
+        <CookieConsent />
       </body>
     </html>
   )

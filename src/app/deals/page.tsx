@@ -193,14 +193,14 @@ export default function DealsPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
-      <main className="flex-grow bg-retro-light py-12">
+      <main className="flex-grow bg-retro-light py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col space-y-8">
-            <div className="flex justify-between items-center">
-              <h1 className="text-4xl font-display text-retro-dark">Deals Near You</h1>
+          <div className="flex flex-col space-y-6 sm:space-y-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-0">
+              <h1 className="text-3xl sm:text-4xl font-display text-retro-dark">Deals Near You</h1>
               <Link
                 href="/spin"
-                className="btn-primary inline-flex items-center space-x-2 text-lg font-bold"
+                className="btn-primary inline-flex items-center justify-center space-x-2 text-base sm:text-lg font-bold py-3 px-4 sm:px-6"
               >
                 <Compass className="h-5 w-5" />
                 <span>Spin & Win!</span>
@@ -224,12 +224,12 @@ export default function DealsPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredDeals.map((deal) => (
                   <div key={deal.id} className="card card-hover transition-transform hover:-translate-y-1">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-display text-retro-dark">{deal.title}</h2>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-retro-primary/10 text-retro-primary">
+                    <div className="flex items-start sm:items-center justify-between mb-4 gap-2">
+                      <h2 className="text-lg sm:text-xl font-display text-retro-dark">{deal.title}</h2>
+                      <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-retro-primary/10 text-retro-primary whitespace-nowrap">
                         {formatDiscount(deal)}
                       </span>
                     </div>
