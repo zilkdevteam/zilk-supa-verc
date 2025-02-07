@@ -8,56 +8,60 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        border: 'rgb(var(--border) / <alpha-value>)',
-        background: 'rgb(var(--background) / <alpha-value>)',
-        foreground: 'rgb(var(--foreground) / <alpha-value>)',
-        primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-        },
-        secondary: {
-          50: '#fdf4ff',
-          100: '#fae8ff',
-          200: '#f5d0fe',
-          300: '#f0abfc',
-          400: '#e879f9',
-          500: '#d946ef',
-          600: '#c026d3',
-          700: '#a21caf',
-          800: '#86198f',
-          900: '#701a75',
+        retro: {
+          // Main colors
+          primary: '#E94F37',     // Bright retro red
+          dark: '#1B1B3A',        // Deep navy
+          light: '#FFFFFF',       // White
+          muted: '#7A7A8C',       // Muted text
+          
+          // Background variations
+          'dark-800': '#2A2A4A',
+          'dark-700': '#3A3A5A',
+          'light-100': '#FFFFFF',
+          'light-200': '#F8F8F8',
+          
+          // Accent colors
+          accent: '#4361EE',      // Bright blue
+          success: '#10B981',     // Green
+          warning: '#FFB627',     // Yellow
         },
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-      },
-      animation: {
-        'spin-slow': 'spin 3s linear infinite',
-        'bounce-slow': 'bounce 3s infinite',
-        float: 'float 3s ease-in-out infinite',
-      },
-      keyframes: {
-        float: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' },
-        },
+        'display': ['Rubik Mono One', 'sans-serif'],
+        'mono': ['Rubik Mono One', 'monospace'],
+        'sans': ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'inner-lg': 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
+        'retro': '4px 4px 0px rgba(27, 27, 58, 0.2)',
+        'retro-lg': '6px 6px 0px rgba(27, 27, 58, 0.2)',
+        'retro-xl': '8px 8px 0px rgba(27, 27, 58, 0.2)',
+        'retro-inner': 'inset 4px 4px 0px rgba(27, 27, 58, 0.1)',
+        'neon': '0 0 5px rgba(233, 79, 55, 0.5), 0 0 20px rgba(233, 79, 55, 0.3)',
+        'neon-lg': '0 0 10px rgba(233, 79, 55, 0.5), 0 0 30px rgba(233, 79, 55, 0.3)',
+        'neon-xl': '0 0 15px rgba(233, 79, 55, 0.5), 0 0 40px rgba(233, 79, 55, 0.3)',
+        'neon-2xl': '0 0 25px rgba(233, 79, 55, 0.5), 0 0 50px rgba(233, 79, 55, 0.3)',
+      },
+      backgroundImage: {
+        'grid': 'radial-gradient(rgba(27, 27, 58, 0.1) 1px, transparent 1px)',
+        'noise': "url('/patterns/noise.png')",
+      },
+      backgroundSize: {
+        'grid': '20px 20px',
+      },
+      borderWidth: {
+        '3': '3px',
+      },
+      animation: {
+        'bounce-slight': 'bounce-slight 1s ease-in-out infinite',
+      },
+      keyframes: {
+        'bounce-slight': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-5px)' },
+        },
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/aspect-ratio'),
-  ],
+  plugins: [],
 }; 

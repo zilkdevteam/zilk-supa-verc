@@ -2,75 +2,120 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 199 89% 48%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 291 91% 58%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 199 89% 48%;
-    --radius: 0.5rem;
-  }
-}
+@import url('https://fonts.googleapis.com/css2?family=Righteous&family=Rubik+Mono+One&family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
-  * {
-    @apply border-gray-200;
+  :root {
+    --retro-grid-size: 20px;
   }
+  
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-retro-light text-retro-dark antialiased;
+    background-image: radial-gradient(rgba(27, 27, 58, 0.1) 1px, transparent 1px);
+    background-size: var(--retro-grid-size) var(--retro-grid-size);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-retro-dark;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium text-white 
+           bg-retro-primary border-2 border-retro-dark rounded-lg shadow-retro
+           transition-all duration-200 ease-out;
+  }
+  
+  .btn-primary:hover {
+    @apply shadow-neon-lg -translate-y-0.5;
   }
   
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50;
+    @apply inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium 
+           text-retro-dark bg-white border-2 border-retro-dark rounded-lg shadow-retro
+           transition-all duration-200 ease-out;
+  }
+
+  .btn-secondary:hover {
+    @apply bg-retro-light-200 shadow-retro-lg -translate-y-0.5;
   }
 
   .card {
-    @apply rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5 p-6;
+    @apply bg-white border-2 border-retro-dark rounded-lg p-6 shadow-retro
+           transition-all duration-200 ease-out;
+  }
+
+  .card:hover {
+    @apply shadow-retro-lg;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200;
+  }
+
+  .card-hover:hover {
+    @apply shadow-neon-lg -translate-y-0.5;
   }
 
   .input-field {
-    @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6;
+    @apply block w-full px-4 py-2.5 text-retro-dark bg-white
+           border-2 border-retro-dark rounded-lg shadow-retro-inner
+           focus:border-retro-primary focus:ring-2 focus:ring-retro-primary/20
+           placeholder:text-retro-muted transition-all duration-200;
   }
 
   .label {
-    @apply block text-sm font-medium leading-6 text-gray-900;
+    @apply block text-sm font-medium text-retro-dark mb-1.5;
+  }
+
+  .nav-link {
+    @apply inline-flex items-center px-4 py-2 text-sm font-medium text-retro-muted
+           hover:text-retro-dark hover:bg-retro-light-200 rounded-lg
+           transition-colors duration-200;
+  }
+
+  .nav-link-active {
+    @apply text-retro-dark bg-retro-light-200 font-semibold;
   }
 }
 
-/* Custom animations */
-@keyframes float {
-  0% {
-    transform: translateY(0px);
+@layer utilities {
+  .bg-grid {
+    background-image: radial-gradient(rgba(27, 27, 58, 0.1) 1px, transparent 1px);
+    background-size: var(--retro-grid-size) var(--retro-grid-size);
   }
-  50% {
-    transform: translateY(-10px);
+
+  .retro-clip {
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%);
   }
-  100% {
-    transform: translateY(0px);
+
+  .text-glow {
+    text-shadow: 0 0 10px rgba(233, 79, 55, 0.5);
+  }
+
+  .text-glow-blue {
+    text-shadow: 0 0 10px rgba(67, 97, 238, 0.5);
+  }
+
+  .text-glow-green {
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
   }
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-retro-light-200;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-retro-muted rounded-full border-2 border-retro-light-200;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-retro-dark;
 }
