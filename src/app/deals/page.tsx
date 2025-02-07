@@ -15,13 +15,11 @@ interface Deal {
   discount_amount: number;
   start_date: string;
   end_date: string;
+  business_id: string;
   businesses: {
     name: string;
     address: string;
-    location: {
-      latitude: number;
-      longitude: number;
-    };
+    location: string; // Supabase returns POINT as string
   };
 }
 
@@ -83,11 +81,21 @@ export default function DealsPage() {
           `)
           .eq('is_active', true)
           .is('is_spin_exclusive', false)
-          .gte('end_date', new Date().toISOString()); // Only show active deals that haven't ended
+          .gte('end_date', new Date().toISOString());
 
         if (error) throw error;
-        console.log('Fetched deals:', data); // Debug log
-        setDeals(data || []);
+        
+        // Transform the data to match our Deal interface
+        const transformedDeals = (data || []).map(deal => ({
+          ...deal,
+          businesses: {
+            name: deal.businesses.name,
+            address: deal.businesses.address,
+            location: deal.businesses.location
+          }
+        }));
+
+        setDeals(transformedDeals);
       } catch (error) {
         console.error('Error fetching deals:', error);
       } finally {
@@ -138,18 +146,29 @@ export default function DealsPage() {
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'distance':
-          if (!userLocation || !a.businesses?.location || !b.businesses?.location) return 0;
+          if (!userLocation) return 0;
+          // Parse location string from Supabase POINT type
+          const getCoordinates = (locationString: string) => {
+            const match = locationString.match(/POINT\((.+) (.+)\)/);
+            return match ? { longitude: parseFloat(match[1]), latitude: parseFloat(match[2]) } : null;
+          };
+          
+          const locationA = getCoordinates(a.businesses.location);
+          const locationB = getCoordinates(b.businesses.location);
+          
+          if (!locationA || !locationB) return 0;
+          
           const distA = calculateDistance(
             userLocation.latitude,
             userLocation.longitude,
-            a.businesses.location.latitude,
-            a.businesses.location.longitude
+            locationA.latitude,
+            locationA.longitude
           );
           const distB = calculateDistance(
             userLocation.latitude,
             userLocation.longitude,
-            b.businesses.location.latitude,
-            b.businesses.location.longitude
+            locationB.latitude,
+            locationB.longitude
           );
           return distA - distB;
         
