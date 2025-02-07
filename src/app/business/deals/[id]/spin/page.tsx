@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { useParams } from 'next/navigation';
+import Navigation from '@/components/Navigation';
 
 interface Prize {
   name: string;
@@ -66,6 +67,7 @@ const generatePrizes = (dealTitle: string, dealDiscount: number, dealType: 'perc
 
 export default function SpinPage() {
   const params = useParams();
+  const router = useRouter();
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [currentPrize, setCurrentPrize] = useState<Prize | null>(null);
@@ -73,7 +75,7 @@ export default function SpinPage() {
   const [prizes, setPrizes] = useState<Prize[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [spinsRemaining, setSpinsRemaining] = useState(0);
+  const [spinsRemaining, setSpinsRemaining] = useState(3);
 
   useEffect(() => {
     loadDealData();
@@ -81,6 +83,12 @@ export default function SpinPage() {
 
   const loadDealData = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/auth');
+        return;
+      }
+
       const { data: deal, error: dealError } = await supabase
         .from('deals')
         .select('*')
@@ -91,17 +99,19 @@ export default function SpinPage() {
 
       setDealTitle(deal.title);
       setPrizes(generatePrizes(deal.title, deal.discount_amount, deal.discount_type));
-      
-      // Get remaining spins
-      const { data: spins, error: spinsError } = await supabase
+
+      // Check spins remaining
+      const { data: spinData, error: spinError } = await supabase
         .from('deal_spins')
         .select('spins_remaining')
         .eq('deal_id', params.id)
+        .eq('user_id', user.id)
         .single();
 
-      if (spinsError && spinsError.code !== 'PGRST116') throw spinsError;
-      
-      setSpinsRemaining(spins?.spins_remaining || 3); // Default to 3 spins if no record
+      if (!spinError && spinData) {
+        setSpinsRemaining(spinData.spins_remaining);
+      }
+
     } catch (err) {
       console.error('Error loading deal:', err);
       setError('Failed to load deal data');
@@ -111,50 +121,51 @@ export default function SpinPage() {
   };
 
   const spinWheel = async () => {
-    if (!isSpinning && spinsRemaining > 0) {
+    if (isSpinning || spinsRemaining <= 0) return;
+
+    try {
       setIsSpinning(true);
-      const spinDegrees = (Math.floor(Math.random() * 3) + 3) * 360 + Math.random() * 360;
-      const newRotation = rotation + spinDegrees;
-      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/auth');
+        return;
+      }
+
+      // Calculate random rotation (ensure it spins at least 5 times)
+      const minSpins = 5;
+      const extraSpins = Math.floor(Math.random() * 3); // 0-2 extra spins
+      const totalSpins = minSpins + extraSpins;
+      const baseRotation = totalSpins * 360;
+      const prizeIndex = Math.floor(Math.random() * prizes.length);
+      const prizeRotation = (360 / prizes.length) * prizeIndex;
+      const newRotation = baseRotation + prizeRotation;
+
       setRotation(newRotation);
-      
-      // Calculate winning prize after spin
-      setTimeout(async () => {
-        const normalizedRotation = newRotation % 360;
-        const prizeIndex = Math.floor((360 - (normalizedRotation % 360)) / (360 / prizes.length));
-        const prize = prizes[prizeIndex];
-        setCurrentPrize(prize);
+      setCurrentPrize(prizes[prizeIndex]);
+
+      // Update spins remaining in database
+      const { error: updateError } = await supabase
+        .from('deal_spins')
+        .upsert({
+          deal_id: params.id,
+          user_id: user.id,
+          spins_remaining: spinsRemaining - 1,
+          last_prize: prizes[prizeIndex].name,
+          last_spin_date: new Date().toISOString(),
+        });
+
+      if (updateError) throw updateError;
+      setSpinsRemaining(prev => prev - 1);
+
+      // Wait for animation to complete
+      setTimeout(() => {
         setIsSpinning(false);
+      }, 5000);
 
-        // Update spins remaining
-        const newSpinsRemaining = spinsRemaining - 1;
-        setSpinsRemaining(newSpinsRemaining);
-
-        try {
-          // Record the spin result
-          await supabase.from('deal_spins').upsert({
-            deal_id: params.id,
-            user_id: (await supabase.auth.getUser()).data.user?.id,
-            spins_remaining: newSpinsRemaining,
-            last_prize: prize.name,
-            last_spin_date: new Date().toISOString()
-          });
-
-          // If they won a prize, record it in deal_redemptions
-          if (prize.discount_amount > 0) {
-            const { data: { user } } = await supabase.auth.getUser();
-            await supabase.from('deal_redemptions').insert({
-              deal_id: params.id,
-              user_id: user?.id,
-              redemption_date: new Date().toISOString(),
-              status: 'pending',
-              notes: `Spin Wheel Prize: ${prize.name} - ${prize.discount_amount}${prize.discount_type === 'percentage' ? '%' : '$'} off`
-            });
-          }
-        } catch (err) {
-          console.error('Error recording spin:', err);
-        }
-      }, 3000);
+    } catch (err) {
+      console.error('Error spinning wheel:', err);
+      setError('Failed to spin the wheel');
+      setIsSpinning(false);
     }
   };
 
@@ -162,128 +173,144 @@ export default function SpinPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-retro-primary"></div>
-      </div>
+      <>
+        <Navigation />
+        <div className="flex items-center justify-center min-h-screen bg-retro-light">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-retro-accent"></div>
+        </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600">Error Loading Deal</h2>
-          <p className="mt-2 text-retro-muted">{error}</p>
+      <>
+        <Navigation />
+        <div className="flex items-center justify-center min-h-screen bg-retro-light">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-red-600">Error</h2>
+            <p className="mt-2 text-retro-muted">{error}</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="flex flex-col items-center gap-8 py-12">
-      <h1 className="text-3xl font-display text-retro-dark text-center">
-        Spin to Win: {dealTitle}
-      </h1>
-      
-      {/* Static pointer triangle */}
-      <div className="relative">
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
-          <div className="w-8 h-8 bg-retro-primary"
-              style={{
-                clipPath: 'polygon(50% 100%, 0% 0%, 100% 0%)'
-              }} />
-        </div>
-        
-        {/* Wheel container */}
-        <div 
-          className="relative w-96 h-96"
-          style={{
-            transform: `rotate(${rotation}deg)`,
-            transition: isSpinning ? 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none'
-          }}
-        >
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            {prizes.map((prize, index) => {
-              const startAngle = index * sliceDegrees;
-              const endAngle = (index + 1) * sliceDegrees;
-              
-              const startRad = (startAngle - 90) * Math.PI / 180;
-              const endRad = (endAngle - 90) * Math.PI / 180;
-              
-              const x1 = 50 + 50 * Math.cos(startRad);
-              const y1 = 50 + 50 * Math.sin(startRad);
-              const x2 = 50 + 50 * Math.cos(endRad);
-              const y2 = 50 + 50 * Math.sin(endRad);
-              
-              const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-              
-              const textAngle = (startAngle + endAngle) / 2;
-              const textRad = (textAngle - 90) * Math.PI / 180;
-              const textX = 50 + 35 * Math.cos(textRad);
-              const textY = 50 + 35 * Math.sin(textRad);
-              
-              const pathData = `
-                M 50 50
-                L ${x1} ${y1}
-                A 50 50 0 ${largeArcFlag} 1 ${x2} ${y2}
-                Z
-              `;
+    <>
+      <Navigation />
+      <main className="min-h-screen bg-retro-light">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex flex-col items-center gap-8">
+            <h1 className="text-3xl font-display text-retro-dark text-center">
+              Spin to Win: {dealTitle}
+            </h1>
 
-              return (
-                <g key={index}>
-                  <path
-                    d={pathData}
-                    fill={prize.color}
-                    stroke="white"
-                    strokeWidth="0.5"
-                  />
-                  <text
-                    x={textX}
-                    y={textY}
-                    transform={`rotate(${textAngle}, ${textX}, ${textY})`}
-                    textAnchor="middle"
-                    fontSize="3.5"
-                    fill="white"
-                    style={{ userSelect: 'none' }}
-                  >
-                    {prize.name}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-          
-          {/* Center point */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg z-10" />
-        </div>
-      </div>
-      
-      <div className="text-center space-y-4">
-        <div className="text-lg font-medium text-retro-muted mb-4">
-          Spins Remaining: {spinsRemaining}
-        </div>
-
-        <button
-          onClick={spinWheel}
-          disabled={isSpinning || spinsRemaining === 0}
-          className={`btn-primary text-lg ${
-            isSpinning || spinsRemaining === 0 ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          {isSpinning ? 'Spinning...' : spinsRemaining === 0 ? 'No Spins Left' : 'Spin the Wheel!'}
-        </button>
-        
-        {currentPrize && !isSpinning && (
-          <div className="text-xl font-semibold text-retro-dark mt-4">
-            You landed on: {currentPrize.name}!
-            {currentPrize.discount_amount > 0 && (
-              <div className="text-lg text-retro-primary mt-2">
-                Congratulations! Your prize has been saved.
+            <div className="relative">
+              {/* Static pointer triangle */}
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
+                <div 
+                  className="w-8 h-8 bg-retro-primary"
+                  style={{
+                    clipPath: 'polygon(50% 100%, 0% 0%, 100% 0%)'
+                  }} 
+                />
               </div>
-            )}
+
+              {/* Wheel */}
+              <div 
+                className="relative w-96 h-96"
+                style={{
+                  transform: `rotate(${rotation}deg)`,
+                  transition: isSpinning ? 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none'
+                }}
+              >
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  {prizes.map((prize, index) => {
+                    const startAngle = index * sliceDegrees;
+                    const endAngle = (index + 1) * sliceDegrees;
+                    
+                    const startRad = (startAngle - 90) * Math.PI / 180;
+                    const endRad = (endAngle - 90) * Math.PI / 180;
+                    
+                    const x1 = 50 + 50 * Math.cos(startRad);
+                    const y1 = 50 + 50 * Math.sin(startRad);
+                    const x2 = 50 + 50 * Math.cos(endRad);
+                    const y2 = 50 + 50 * Math.sin(endRad);
+                    
+                    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+                    
+                    const textAngle = (startAngle + endAngle) / 2;
+                    const textRad = (textAngle - 90) * Math.PI / 180;
+                    const textX = 50 + 35 * Math.cos(textRad);
+                    const textY = 50 + 35 * Math.sin(textRad);
+                    
+                    const pathData = `
+                      M 50 50
+                      L ${x1} ${y1}
+                      A 50 50 0 ${largeArcFlag} 1 ${x2} ${y2}
+                      Z
+                    `;
+
+                    return (
+                      <g key={index}>
+                        <path
+                          d={pathData}
+                          fill={prize.color}
+                          stroke="white"
+                          strokeWidth="0.5"
+                        />
+                        <text
+                          x={textX}
+                          y={textY}
+                          transform={`rotate(${textAngle}, ${textX}, ${textY})`}
+                          textAnchor="middle"
+                          fontSize="3.5"
+                          fill="white"
+                          style={{ userSelect: 'none' }}
+                        >
+                          {prize.name}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+
+                {/* Center point */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg z-10 border-2 border-retro-dark" />
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="text-center space-y-4">
+              <p className="text-lg font-bold text-retro-dark">
+                Spins Remaining: {spinsRemaining}
+              </p>
+              
+              <button
+                onClick={spinWheel}
+                disabled={isSpinning || spinsRemaining <= 0}
+                className="btn-primary text-lg font-bold px-8 py-3 disabled:opacity-50"
+              >
+                {isSpinning ? 'Spinning...' : spinsRemaining > 0 ? 'Spin!' : 'No Spins Left'}
+              </button>
+
+              {currentPrize && !isSpinning && (
+                <div className="mt-6 p-6 bg-retro-accent/10 rounded-lg border-2 border-retro-accent/20">
+                  <h2 className="text-xl font-display text-retro-dark mb-2">
+                    {currentPrize.name === 'Try Again' ? 'Better Luck Next Time!' : 'Congratulations!'}
+                  </h2>
+                  <p className="text-retro-dark font-bold">
+                    {currentPrize.name === 'Try Again' 
+                      ? 'Give it another spin!'
+                      : `You won: ${currentPrize.name}`}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      </main>
+    </>
   );
 } 
