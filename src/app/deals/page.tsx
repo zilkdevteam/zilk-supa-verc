@@ -63,17 +63,27 @@ export default function DealsPage() {
   useEffect(() => {
     async function fetchDeals() {
       try {
+        setLoading(true);
         const { data, error } = await supabase
           .from('deals')
           .select(`
-            *,
+            id,
+            title,
+            description,
+            discount_type,
+            discount_amount,
+            start_date,
+            end_date,
+            business_id,
             businesses (
               name,
               address,
               location
             )
           `)
-          .order('created_at', { ascending: false });
+          .eq('is_active', true)
+          .is('is_spin_exclusive', false)
+          .gte('end_date', new Date().toISOString()); // Only show active deals that haven't ended
 
         if (error) throw error;
         console.log('Fetched deals:', data); // Debug log
@@ -122,20 +132,6 @@ export default function DealsPage() {
     // Apply discount type filter
     if (filters.discountType !== 'all') {
       filtered = filtered.filter(deal => deal.discount_type === filters.discountType);
-    }
-
-    // Apply distance filter only if user has location AND has adjusted the distance filter
-    if (userLocation && filters.maxDistance !== 50) {
-      filtered = filtered.filter(deal => {
-        if (!deal.businesses?.location) return false;
-        const distance = calculateDistance(
-          userLocation.latitude,
-          userLocation.longitude,
-          deal.businesses.location.latitude,
-          deal.businesses.location.longitude
-        );
-        return distance <= filters.maxDistance;
-      });
     }
 
     // Sort deals
@@ -198,7 +194,7 @@ export default function DealsPage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-retro-primary mx-auto"></div>
                 <p className="mt-4 text-retro-muted">Loading deals...</p>
               </div>
-            ) : filteredDeals.length === 0 ? (
+            ) : deals.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg border-2 border-retro-dark shadow-retro">
                 <p className="text-xl text-retro-dark">No deals available in your area yet.</p>
                 {!userLocation && (

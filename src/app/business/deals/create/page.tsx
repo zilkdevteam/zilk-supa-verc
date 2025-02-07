@@ -93,200 +93,202 @@ export default function CreateDealPage() {
   };
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Create New Deal</h1>
-        <p className="mt-2 text-sm text-gray-700">
-          Set up a new deal or promotion for your business.
-        </p>
-      </div>
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="bg-white shadow-retro rounded-lg border-2 border-retro-dark/10 p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-display text-retro-dark">Create New Deal</h1>
+          <p className="mt-2 text-sm text-retro-muted">
+            Fill out the form below to create a new deal for your business.
+          </p>
+        </div>
 
-      {error && (
-        <div className="mb-6 rounded-md bg-red-50 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>{error}</p>
+        {error && (
+          <div className="mb-6 rounded-md bg-red-50 p-4">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white shadow rounded-lg p-6">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-            Deal Title *
-          </label>
-          <input
-            type="text"
-            id="title"
-            required
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            placeholder="e.g., Summer Special 20% Off"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-            Description *
-          </label>
-          <textarea
-            id="description"
-            required
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            rows={3}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            placeholder="Describe your deal..."
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="discount_type" className="block text-sm font-medium text-gray-700">
-              Discount Type *
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+              Deal Title *
             </label>
-            <select
-              id="discount_type"
+            <input
+              type="text"
+              id="title"
               required
-              value={formData.discount_type}
-              onChange={(e) => setFormData(prev => ({ ...prev, discount_type: e.target.value as 'percentage' | 'fixed' }))}
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            >
-              <option value="percentage">Percentage Off</option>
-              <option value="fixed">Fixed Amount Off</option>
-            </select>
+              placeholder="e.g., Summer Special 20% Off"
+            />
           </div>
 
           <div>
-            <label htmlFor="discount_amount" className="block text-sm font-medium text-gray-700">
-              Discount Amount *
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+              Description *
             </label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 sm:text-sm">
-                  {formData.discount_type === 'fixed' ? '$' : ''}
-                </span>
+            <textarea
+              id="description"
+              required
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              rows={3}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              placeholder="Describe your deal..."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div>
+              <label htmlFor="discount_type" className="block text-sm font-medium text-gray-700">
+                Discount Type *
+              </label>
+              <select
+                id="discount_type"
+                required
+                value={formData.discount_type}
+                onChange={(e) => setFormData(prev => ({ ...prev, discount_type: e.target.value as 'percentage' | 'fixed' }))}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              >
+                <option value="percentage">Percentage Off</option>
+                <option value="fixed">Fixed Amount Off</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="discount_amount" className="block text-sm font-medium text-gray-700">
+                Discount Amount *
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-500 sm:text-sm">
+                    {formData.discount_type === 'fixed' ? '$' : ''}
+                  </span>
+                </div>
+                <input
+                  type="number"
+                  id="discount_amount"
+                  required
+                  min="0"
+                  step={formData.discount_type === 'fixed' ? '0.01' : '1'}
+                  max={formData.discount_type === 'percentage' ? '100' : undefined}
+                  value={formData.discount_amount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, discount_amount: e.target.value }))}
+                  className={`block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 ${
+                    formData.discount_type === 'fixed' ? 'pl-7' : 'pl-3'
+                  } pr-12 py-2`}
+                  placeholder="0"
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <span className="text-gray-500 sm:text-sm">
+                    {formData.discount_type === 'percentage' ? '%' : ''}
+                  </span>
+                </div>
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">
+                Start Date *
+              </label>
+              <input
+                type="datetime-local"
+                id="start_date"
+                required
+                value={formData.start_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="end_date" className="block text-sm font-medium text-gray-700">
+                End Date *
+              </label>
+              <input
+                type="datetime-local"
+                id="end_date"
+                required
+                value={formData.end_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="max_redemptions" className="block text-sm font-medium text-gray-700">
+                Maximum Redemptions
+              </label>
               <input
                 type="number"
-                id="discount_amount"
-                required
-                min="0"
-                step={formData.discount_type === 'fixed' ? '0.01' : '1'}
-                max={formData.discount_type === 'percentage' ? '100' : undefined}
-                value={formData.discount_amount}
-                onChange={(e) => setFormData(prev => ({ ...prev, discount_amount: e.target.value }))}
-                className={`block w-full rounded-md border border-gray-300 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 ${
-                  formData.discount_type === 'fixed' ? 'pl-7' : 'pl-3'
-                } pr-12 py-2`}
-                placeholder="0"
+                id="max_redemptions"
+                min="1"
+                value={formData.max_redemptions}
+                onChange={(e) => setFormData(prev => ({ ...prev, max_redemptions: e.target.value }))}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                placeholder="Leave empty for unlimited"
               />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 sm:text-sm">
-                  {formData.discount_type === 'percentage' ? '%' : ''}
-                </span>
-              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                Optional. Leave empty for unlimited redemptions.
+              </p>
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">
-              Start Date *
-            </label>
-            <input
-              type="datetime-local"
-              id="start_date"
-              required
-              value={formData.start_date}
-              onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="end_date" className="block text-sm font-medium text-gray-700">
-              End Date *
-            </label>
-            <input
-              type="datetime-local"
-              id="end_date"
-              required
-              value={formData.end_date}
-              onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="max_redemptions" className="block text-sm font-medium text-gray-700">
-              Maximum Redemptions
-            </label>
-            <input
-              type="number"
-              id="max_redemptions"
-              min="1"
-              value={formData.max_redemptions}
-              onChange={(e) => setFormData(prev => ({ ...prev, max_redemptions: e.target.value }))}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              placeholder="Leave empty for unlimited"
-            />
-            <p className="mt-1 text-sm text-gray-500">
-              Optional. Leave empty for unlimited redemptions.
-            </p>
-          </div>
-
-          <div className="flex items-center">
-            <label htmlFor="is_active" className="text-sm font-medium text-gray-700 mr-3">
-              Active Status
-            </label>
-            <div className="relative inline-block w-10 mr-2 align-middle select-none">
-              <input
-                type="checkbox"
-                id="is_active"
-                checked={formData.is_active}
-                onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                className="sr-only"
-              />
-              <div
-                className={`block h-6 w-10 rounded-full ${
-                  formData.is_active ? 'bg-primary-600' : 'bg-gray-200'
-                }`}
-              >
-                <div
-                  className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transform transition-transform ${
-                    formData.is_active ? 'translate-x-4' : 'translate-x-0'
-                  }`}
+            <div className="flex items-center">
+              <label htmlFor="is_active" className="text-sm font-medium text-gray-700 mr-3">
+                Active Status
+              </label>
+              <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                  className="sr-only"
                 />
+                <div
+                  className={`block h-6 w-10 rounded-full ${
+                    formData.is_active ? 'bg-primary-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <div
+                    className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transform transition-transform ${
+                      formData.is_active ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </div>
               </div>
+              <span className="text-sm text-gray-500">
+                {formData.is_active ? 'Deal is active' : 'Deal is inactive'}
+              </span>
             </div>
-            <span className="text-sm text-gray-500">
-              {formData.is_active ? 'Deal is active' : 'Deal is inactive'}
-            </span>
           </div>
-        </div>
 
-        <div className="flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={() => router.push('/business/deals')}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Creating...' : 'Create Deal'}
-          </button>
-        </div>
-      </form>
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={() => router.push('/business/deals')}
+              className="px-4 py-2 rounded-md shadow-retro text-sm font-medium text-retro-dark bg-white border-2 border-retro-dark/10 hover:bg-retro-light/50 transition-colors focus:outline-none focus:ring-2 focus:ring-retro-primary focus:ring-offset-2"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 rounded-md shadow-retro text-sm font-medium text-white bg-retro-primary hover:bg-retro-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-retro-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Creating...' : 'Create Deal'}
+            </button>
+          </div>
+        </form>
+      </div>
     </main>
   );
 } 

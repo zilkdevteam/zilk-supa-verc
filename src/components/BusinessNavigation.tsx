@@ -26,37 +26,40 @@ export default function BusinessNavigation() {
   ];
 
   return (
-    <nav className="bg-retro-accent/10 border-b-2 border-retro-accent/20">
+    <div className="bg-white border-b-2 border-retro-dark/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16">
-          <div className="flex space-x-4">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
-              
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`group inline-flex items-center px-4 py-2 text-sm font-bold rounded-lg
-                    transition-all duration-200 ${
-                    isActive
-                      ? 'bg-retro-accent/20 text-retro-primary shadow-retro'
-                      : 'text-retro-primary hover:text-retro-primary/80 hover:bg-retro-accent/20'
+        <nav className="flex space-x-8" aria-label="Business Navigation">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            const Icon = item.icon;
+            
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`group relative pb-2 pt-4 px-1 ${
+                  isActive
+                    ? 'text-retro-primary'
+                    : 'text-retro-muted hover:text-retro-dark'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Icon className="h-5 w-5" />
+                  <span className="font-medium">{item.name}</span>
+                </div>
+                
+                {/* Active indicator line */}
+                <span
+                  className={`absolute inset-x-0 bottom-0 h-0.5 transition-colors duration-200 ${
+                    isActive ? 'bg-retro-primary' : 'bg-transparent group-hover:bg-retro-dark/10'
                   }`}
-                >
-                  <Icon className={`h-5 w-5 mr-2 transition-colors duration-200 ${
-                    isActive 
-                      ? 'text-retro-primary'
-                      : 'text-retro-primary group-hover:text-retro-primary/80'
-                  }`} />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
+                  aria-hidden="true"
+                />
+              </Link>
+            );
+          })}
+        </nav>
       </div>
-    </nav>
+    </div>
   );
 } 
