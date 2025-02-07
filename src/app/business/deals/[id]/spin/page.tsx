@@ -189,9 +189,9 @@ export default function SpinPage() {
       <div className="relative">
         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
           <div className="w-8 h-8 bg-retro-primary"
-               style={{
-                 clipPath: 'polygon(50% 100%, 0% 0%, 100% 0%)'
-               }} />
+              style={{
+                clipPath: 'polygon(50% 100%, 0% 0%, 100% 0%)'
+              }} />
         </div>
         
         {/* Wheel container */}
