@@ -27,12 +27,22 @@ interface AnalyticsSummary {
   spin_exclusive_redemptions: number;
 }
 
+type SortKey = keyof DealAnalytics;
+
+interface SortConfig {
+  key: SortKey;
+  direction: 'asc' | 'desc';
+}
+
 export default function AnalyticsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dealAnalytics, setDealAnalytics] = useState<DealAnalytics[]>([]);
-  const [sortConfig, setSortConfig] = useState({ key: 'total_views', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'total_views',
+    direction: 'desc',
+  });
   const [timeFilter, setTimeFilter] = useState('all'); // all, week, month, year
   const [summary, setSummary] = useState<AnalyticsSummary>({
     total_deals: 0,
@@ -186,18 +196,21 @@ export default function AnalyticsPage() {
     }
   };
 
-  const handleSort = (key: keyof DealAnalytics) => {
-    setSortConfig({
+  const handleSort = (key: SortKey) => {
+    setSortConfig(prev => ({
       key,
-      direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
-    });
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
+    }));
   };
 
   const sortedDeals = [...dealAnalytics].sort((a, b) => {
+    const aValue = a[sortConfig.key];
+    const bValue = b[sortConfig.key];
+
     if (sortConfig.direction === 'asc') {
-      return a[sortConfig.key] > b[sortConfig.key] ? 1 : -1;
+      return aValue > bValue ? 1 : -1;
     }
-    return a[sortConfig.key] < b[sortConfig.key] ? 1 : -1;
+    return aValue < bValue ? 1 : -1;
   });
 
   if (loading) {
