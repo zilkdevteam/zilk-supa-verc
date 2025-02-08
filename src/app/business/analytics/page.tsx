@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { BarChart3, TrendingUp, Users, Tag, ArrowUp, ArrowDown } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Tag, ArrowUp, ArrowDown, Calendar, Filter } from 'lucide-react';
 
 interface DealAnalytics {
   id: string;
@@ -13,6 +13,8 @@ interface DealAnalytics {
   conversion_rate: number;
   start_date: string;
   end_date: string;
+  is_spin_exclusive: boolean;
+  is_active: boolean;
 }
 
 interface AnalyticsSummary {
@@ -21,6 +23,8 @@ interface AnalyticsSummary {
   total_redemptions: number;
   total_views: number;
   average_conversion_rate: number;
+  spin_exclusive_deals: number;
+  spin_exclusive_redemptions: number;
 }
 
 export default function AnalyticsPage() {
@@ -28,28 +32,54 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dealAnalytics, setDealAnalytics] = useState<DealAnalytics[]>([]);
+  const [sortConfig, setSortConfig] = useState({ key: 'total_views', direction: 'desc' });
+  const [timeFilter, setTimeFilter] = useState('all'); // all, week, month, year
   const [summary, setSummary] = useState<AnalyticsSummary>({
     total_deals: 0,
     active_deals: 0,
     total_redemptions: 0,
     total_views: 0,
     average_conversion_rate: 0,
+    spin_exclusive_deals: 0,
+    spin_exclusive_redemptions: 0,
   });
 
   useEffect(() => {
     fetchAnalytics();
-  }, []);
+  }, [timeFilter]);
 
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/auth');
         return;
       }
 
-      // Fetch deals with their analytics
+      console.log('Fetching analytics for user:', user.id);
+
+      // Get the date range based on timeFilter
+      const now = new Date();
+      let startDate = new Date();
+      switch(timeFilter) {
+        case 'week':
+          startDate.setDate(startDate.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setDate(startDate.getDate() - 30);
+          break;
+        case 'year':
+          startDate.setDate(startDate.getDate() - 365);
+          break;
+        case 'all':
+          startDate = new Date(0); // Beginning of time
+          break;
+      }
+
+      // Fetch deals
       const { data: deals, error: dealsError } = await supabase
         .from('deals')
         .select(`
@@ -58,32 +88,84 @@ export default function AnalyticsPage() {
           start_date,
           end_date,
           current_redemptions,
-          views,
-          is_active
+          is_active,
+          is_spin_exclusive,
+          created_at
         `)
         .eq('business_id', user.id);
 
       if (dealsError) throw dealsError;
 
+      if (!deals || deals.length === 0) {
+        console.log('No deals found');
+        setDealAnalytics([]);
+        setSummary({
+          total_deals: 0,
+          active_deals: 0,
+          total_redemptions: 0,
+          total_views: 0,
+          average_conversion_rate: 0,
+          spin_exclusive_deals: 0,
+          spin_exclusive_redemptions: 0,
+        });
+        return;
+      }
+
+      // Fetch analytics events for views
+      const { data: viewEvents, error: viewsError } = await supabase
+        .from('analytics_events')
+        .select('*')
+        .eq('business_id', user.id)
+        .eq('event_type', 'deal_view')
+        .gte('created_at', startDate.toISOString());
+
+      if (viewsError) throw viewsError;
+
       // Process analytics data
-      const now = new Date();
-      const processedDeals = deals.map(deal => ({
-        id: deal.id,
-        title: deal.title,
-        total_redemptions: deal.current_redemptions || 0,
-        total_views: deal.views || 0,
-        conversion_rate: deal.views ? (deal.current_redemptions / deal.views) * 100 : 0,
-        start_date: deal.start_date,
-        end_date: deal.end_date,
-      }));
+      const dealViews = (viewEvents || []).reduce((acc: { [key: string]: number }, event) => {
+        if (event.deal_id) {
+          acc[event.deal_id] = (acc[event.deal_id] || 0) + 1;
+        }
+        return acc;
+      }, {});
+
+      const processedDeals = deals.map(deal => {
+        const views = dealViews[deal.id] || 0;
+        const redemptions = deal.current_redemptions || 0;
+        return {
+          id: deal.id,
+          title: deal.title,
+          total_redemptions: redemptions,
+          total_views: views,
+          conversion_rate: views > 0 ? (redemptions / views) * 100 : 0,
+          start_date: deal.start_date,
+          end_date: deal.end_date,
+          is_spin_exclusive: deal.is_spin_exclusive || false,
+          is_active: deal.is_active,
+        };
+      });
 
       const activeDealCount = deals.filter(deal => 
         deal.is_active && new Date(deal.end_date) > now
       ).length;
 
+      const spinExclusiveDeals = deals.filter(deal => deal.is_spin_exclusive);
+      const spinExclusiveRedemptions = spinExclusiveDeals.reduce(
+        (sum, deal) => sum + (deal.current_redemptions || 0), 
+        0
+      );
+
       const totalRedemptions = deals.reduce((sum, deal) => sum + (deal.current_redemptions || 0), 0);
-      const totalViews = deals.reduce((sum, deal) => sum + (deal.views || 0), 0);
-      const averageConversion = totalViews ? (totalRedemptions / totalViews) * 100 : 0;
+      const totalViews = Object.values(dealViews).reduce((sum, views) => sum + views, 0);
+      const averageConversion = totalViews > 0 ? (totalRedemptions / totalViews) * 100 : 0;
+
+      console.log('Setting analytics data:', {
+        totalDeals: deals.length,
+        activeDealCount,
+        totalRedemptions,
+        totalViews,
+        averageConversion,
+      });
 
       setDealAnalytics(processedDeals);
       setSummary({
@@ -92,6 +174,8 @@ export default function AnalyticsPage() {
         total_redemptions: totalRedemptions,
         total_views: totalViews,
         average_conversion_rate: averageConversion,
+        spin_exclusive_deals: spinExclusiveDeals.length,
+        spin_exclusive_redemptions: spinExclusiveRedemptions,
       });
 
     } catch (err) {
@@ -102,17 +186,29 @@ export default function AnalyticsPage() {
     }
   };
 
+  const handleSort = (key: keyof DealAnalytics) => {
+    setSortConfig({
+      key,
+      direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+    });
+  };
+
+  const sortedDeals = [...dealAnalytics].sort((a, b) => {
+    if (sortConfig.direction === 'asc') {
+      return a[sortConfig.key] > b[sortConfig.key] ? 1 : -1;
+    }
+    return a[sortConfig.key] < b[sortConfig.key] ? 1 : -1;
+  });
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
-              ))}
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="animate-pulse space-y-8">
+          <div className="h-8 bg-retro-light rounded w-1/4"></div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-retro-light rounded-lg"></div>
+            ))}
           </div>
         </div>
       </div>
@@ -121,187 +217,227 @@ export default function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-red-600">Error Loading Analytics</h2>
-            <p className="mt-2 text-gray-600">{error}</p>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="card">
+          <h2 className="text-xl font-semibold text-retro-dark">No Analytics Data Yet</h2>
+          <p className="mt-2 text-retro-muted">
+            Create some deals to start tracking their performance. Once you have active deals, 
+            you'll see analytics data here including views, redemptions, and conversion rates.
+          </p>
+          <button
+            onClick={() => router.push('/business/deals/create')}
+            className="mt-4 btn-primary"
+          >
+            Create Your First Deal
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="mt-2 text-sm text-gray-600">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl font-display text-retro-dark">Analytics Dashboard</h1>
+          <p className="mt-2 text-sm text-retro-muted">
             Track your deals performance and customer engagement
           </p>
         </div>
+        <div className="flex items-center space-x-4">
+          <select
+            value={timeFilter}
+            onChange={(e) => setTimeFilter(e.target.value)}
+            className="form-select rounded-md border-retro-dark/10 text-sm"
+            aria-label="Time period filter"
+          >
+            <option value="all">All Time</option>
+            <option value="week">Last 7 Days</option>
+            <option value="month">Last 30 Days</option>
+            <option value="year">Last Year</option>
+          </select>
+        </div>
+      </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Tag className="h-6 w-6 text-primary-600" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Active Deals</dt>
-                    <dd className="flex items-baseline">
-                      <div className="text-2xl font-semibold text-gray-900">
-                        {summary.active_deals}
-                      </div>
-                      <div className="ml-2 flex items-baseline text-sm font-semibold">
-                        <span className="text-gray-500">of {summary.total_deals} total</span>
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Users className="h-6 w-6 text-primary-600" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total Views</dt>
-                    <dd className="flex items-baseline">
-                      <div className="text-2xl font-semibold text-gray-900">
-                        {summary.total_views.toLocaleString()}
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <BarChart3 className="h-6 w-6 text-primary-600" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total Redemptions</dt>
-                    <dd className="flex items-baseline">
-                      <div className="text-2xl font-semibold text-gray-900">
-                        {summary.total_redemptions.toLocaleString()}
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <TrendingUp className="h-6 w-6 text-primary-600" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Conversion Rate</dt>
-                    <dd className="flex items-baseline">
-                      <div className="text-2xl font-semibold text-gray-900">
-                        {summary.average_conversion_rate.toFixed(1)}%
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="card">
+          <div className="flex items-center space-x-3">
+            <Tag className="h-6 w-6 text-retro-primary" />
+            <div>
+              <h3 className="text-lg font-display text-retro-dark">Active Deals</h3>
+              <p className="mt-1 text-2xl font-display text-retro-primary">
+                {summary.active_deals}
+                <span className="text-sm text-retro-muted ml-2">of {summary.total_deals}</span>
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Deals Performance Table */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
-              Deals Performance
-            </h3>
+        <div className="card">
+          <div className="flex items-center space-x-3">
+            <Users className="h-6 w-6 text-green-500" />
+            <div>
+              <h3 className="text-lg font-display text-retro-dark">Total Views</h3>
+              <p className="mt-1 text-2xl font-display text-green-500">
+                {summary.total_views.toLocaleString()}
+              </p>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Deal
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Views
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Redemptions
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Conversion Rate
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {dealAnalytics.map((deal) => {
-                  const isActive = new Date(deal.end_date) > new Date();
-                  return (
-                    <tr key={deal.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{deal.title}</div>
-                        <div className="text-sm text-gray-500">
-                          {new Date(deal.start_date).toLocaleDateString()} - {new Date(deal.end_date).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {deal.total_views.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {deal.total_redemptions.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          {deal.conversion_rate > summary.average_conversion_rate ? (
-                            <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                          ) : (
-                            <ArrowDown className="h-4 w-4 text-red-500 mr-1" />
-                          )}
-                          <span className="text-sm text-gray-900">
-                            {deal.conversion_rate.toFixed(1)}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          isActive 
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {isActive ? 'Active' : 'Ended'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center space-x-3">
+            <BarChart3 className="h-6 w-6 text-blue-500" />
+            <div>
+              <h3 className="text-lg font-display text-retro-dark">Redemptions</h3>
+              <p className="mt-1 text-2xl font-display text-blue-500">
+                {summary.total_redemptions.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center space-x-3">
+            <TrendingUp className="h-6 w-6 text-purple-500" />
+            <div>
+              <h3 className="text-lg font-display text-retro-dark">Conversion Rate</h3>
+              <p className="mt-1 text-2xl font-display text-purple-500">
+                {summary.average_conversion_rate.toFixed(1)}%
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </main>
+
+      {/* Spin & Win Stats */}
+      <div className="card mb-8">
+        <h3 className="text-xl font-display text-retro-dark mb-4">Spin & Win Performance</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-retro-light/50 rounded-lg">
+              <Calendar className="h-6 w-6 text-retro-primary" />
+            </div>
+            <div>
+              <p className="text-sm text-retro-muted">Active Spin Deals</p>
+              <p className="text-2xl font-display text-retro-dark">{summary.spin_exclusive_deals}</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-retro-light/50 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-retro-primary" />
+            </div>
+            <div>
+              <p className="text-sm text-retro-muted">Spin Redemptions</p>
+              <p className="text-2xl font-display text-retro-dark">{summary.spin_exclusive_redemptions}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Deals Performance Table */}
+      <div className="card">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-display text-retro-dark">
+            Deals Performance
+          </h3>
+          <div className="flex items-center space-x-2 text-sm text-retro-muted">
+            <Filter className="h-4 w-4" />
+            <span>Click column headers to sort</span>
+          </div>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-retro-dark/10">
+                <th className="px-6 py-3 text-left text-xs font-medium text-retro-muted uppercase tracking-wider">
+                  Deal
+                </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-retro-muted uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort('total_views')}
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>Views</span>
+                    {sortConfig.key === 'total_views' && (
+                      sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-retro-muted uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort('total_redemptions')}
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>Redemptions</span>
+                    {sortConfig.key === 'total_redemptions' && (
+                      sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-retro-muted uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort('conversion_rate')}
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>Conversion</span>
+                    {sortConfig.key === 'conversion_rate' && (
+                      sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-retro-muted uppercase tracking-wider">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-retro-dark/10">
+              {sortedDeals.map((deal) => (
+                <tr key={deal.id} className="hover:bg-retro-light/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div>
+                      <div className="font-medium text-retro-dark">{deal.title}</div>
+                      <div className="text-sm text-retro-muted">
+                        {deal.is_spin_exclusive && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                            Spin Exclusive
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-retro-dark">
+                    {deal.total_views.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 text-retro-dark">
+                    {deal.total_redemptions.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 text-retro-dark">
+                    {deal.conversion_rate.toFixed(1)}%
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      deal.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {deal.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {dealAnalytics.length === 0 && (
+            <div className="text-center py-8">
+              <BarChart3 className="mx-auto h-12 w-12 text-retro-muted/50" />
+              <p className="mt-4 text-lg font-medium text-retro-dark">No deals data available</p>
+              <p className="mt-1 text-retro-muted">Create some deals to start tracking performance</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 } 

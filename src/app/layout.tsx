@@ -1,7 +1,5 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { createClient } from '@supabase/supabase-js'
-import { Analytics } from '@/components/Analytics'
 import CookieConsent from '@/components/CookieConsent'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -19,10 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-retro-light">
           {children}
         </div>
-        <Analytics />
         <CookieConsent />
       </body>
     </html>

@@ -13,6 +13,7 @@ interface FormData {
   end_date: string;
   max_redemptions: string;
   is_active: boolean;
+  is_spin_exclusive: boolean;
 }
 
 export default function CreateDealPage() {
@@ -28,6 +29,7 @@ export default function CreateDealPage() {
     end_date: '',
     max_redemptions: '',
     is_active: true,
+    is_spin_exclusive: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,6 +81,7 @@ export default function CreateDealPage() {
             end_date: formData.end_date,
             max_redemptions: maxRedemptions,
             is_active: formData.is_active,
+            is_spin_exclusive: formData.is_spin_exclusive,
             current_redemptions: 0,
           },
         ]);
@@ -224,6 +227,44 @@ export default function CreateDealPage() {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Deal Type
+              </label>
+              <div className="mt-4 space-y-4">
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="regular_deal"
+                    checked={!formData.is_spin_exclusive}
+                    onChange={() => setFormData(prev => ({ ...prev, is_spin_exclusive: false }))}
+                    className="h-4 w-4 text-retro-primary border-gray-300 focus:ring-retro-primary"
+                  />
+                  <label htmlFor="regular_deal" className="ml-3">
+                    <span className="block text-sm font-medium text-gray-700">Regular Deal</span>
+                    <span className="block text-sm text-gray-500">
+                      Available for immediate redemption by customers
+                    </span>
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="spin_exclusive"
+                    checked={formData.is_spin_exclusive}
+                    onChange={() => setFormData(prev => ({ ...prev, is_spin_exclusive: true }))}
+                    className="h-4 w-4 text-retro-primary border-gray-300 focus:ring-retro-primary"
+                  />
+                  <label htmlFor="spin_exclusive" className="ml-3">
+                    <span className="block text-sm font-medium text-gray-700">Spin & Win Exclusive</span>
+                    <span className="block text-sm text-gray-500">
+                      Only available through the Spin & Win feature
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div>
               <label htmlFor="max_redemptions" className="block text-sm font-medium text-gray-700">
                 Maximum Redemptions
               </label>
@@ -247,11 +288,12 @@ export default function CreateDealPage() {
               </label>
               <div className="relative inline-block w-10 mr-2 align-middle select-none">
                 <input
-                  type="checkbox"
                   id="is_active"
+                  type="checkbox"
                   checked={formData.is_active}
                   onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
                   className="sr-only"
+                  aria-label="Toggle deal active status"
                 />
                 <div
                   className={`block h-6 w-10 rounded-full ${

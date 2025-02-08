@@ -34,6 +34,7 @@ interface FilterOptions {
 export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
   const [filters, setFilters] = useState<FilterOptions>({
     search: '',
@@ -63,6 +64,10 @@ export default function DealsPage() {
     async function fetchDeals() {
       try {
         setLoading(true);
+        setError(null);
+        
+        console.log('Fetching deals...');
+        
         const { data, error } = await supabase
           .from('deals')
           .select(`
@@ -74,6 +79,7 @@ export default function DealsPage() {
             start_date,
             end_date,
             business_id,
+            is_active,
             businesses (
               name,
               address,
@@ -81,24 +87,68 @@ export default function DealsPage() {
             )
           `)
           .eq('is_active', true)
-          .is('is_spin_exclusive', false)
-          .gte('end_date', new Date().toISOString());
+          .eq('is_spin_exclusive', false);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error:', error);
+          console.error('Error details:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
+          throw new Error(`Database error: ${error.message}`);
+        }
+
+        if (!data) {
+          console.log('No data returned from Supabase');
+          setDeals([]);
+          return;
+        }
+
+        console.log('Raw deals data:', data);
+        console.log('Number of deals found:', data.length);
         
         // Transform the data to match our Deal interface
-        const transformedDeals = (data || []).map(deal => ({
-          ...deal,
-          businesses: {
-            name: deal.businesses?.[0]?.name || '',
-            address: deal.businesses?.[0]?.address || '',
-            location: deal.businesses?.[0]?.location || ''
-          }
-        }));
+        const transformedDeals = data
+          .filter(deal => {
+            // Filter out expired deals
+            const endDate = new Date(deal.end_date);
+            const now = new Date();
+            const isValid = endDate > now;
+            if (!isValid) {
+              console.log(`Filtering out expired deal: ${deal.title}, end date: ${deal.end_date}`);
+            }
+            return isValid;
+          })
+          .map(deal => {
+            try {
+              // Safely transform the business data
+              const business = Array.isArray(deal.businesses) ? deal.businesses[0] : deal.businesses;
+              
+              if (!business) {
+                console.warn(`No business data found for deal: ${deal.title}`);
+              }
 
+              return {
+                ...deal,
+                businesses: {
+                  name: business?.name || 'Unknown Business',
+                  address: business?.address || 'Address not available',
+                  location: business?.location || ''
+                }
+              };
+            } catch (err) {
+              console.error(`Error transforming deal ${deal.id}:`, err);
+              throw err;
+            }
+          });
+
+        console.log('Transformed deals:', transformedDeals);
         setDeals(transformedDeals);
       } catch (error) {
-        console.error('Error fetching deals:', error);
+        console.error('Error in fetchDeals:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load deals. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -209,6 +259,12 @@ export default function DealsPage() {
 
             <DealFilters onFilterChange={setFilters} hasLocation={!!userLocation} />
             
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+            
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-retro-primary mx-auto"></div>
@@ -226,7 +282,11 @@ export default function DealsPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredDeals.map((deal) => (
-                  <div key={deal.id} className="card card-hover transition-transform hover:-translate-y-1">
+                  <Link
+                    key={deal.id}
+                    href={`/deals/${deal.id}`}
+                    className="card card-hover transition-transform hover:-translate-y-1"
+                  >
                     <div className="flex items-start sm:items-center justify-between mb-4 gap-2">
                       <h2 className="text-lg sm:text-xl font-display text-retro-dark">{deal.title}</h2>
                       <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-retro-primary/10 text-retro-primary whitespace-nowrap">
@@ -257,16 +317,18 @@ export default function DealsPage() {
                           const location = getCoordinates(deal.businesses.location);
                           if (!location) return null;
                           
-                          return calculateDistance(
+                          const distance = calculateDistance(
                             userLocation.latitude,
                             userLocation.longitude,
                             location.latitude,
                             location.longitude
-                          ).toFixed(1);
-                        })()} miles away
+                          );
+                          
+                          return `${distance.toFixed(1)} miles away`;
+                        })()}
                       </div>
                     )}
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

@@ -13,6 +13,9 @@ const nextConfig = {
   images: {
     domains: ['azsydeuklnbqvsvhdcxr.supabase.co'],
   },
+  serverOptions: {
+    port: 3000,
+  },
 };
 
 module.exports = nextConfig; 
