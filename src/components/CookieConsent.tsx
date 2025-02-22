@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import {NavLink} from 'react-router'
 import { X, Settings } from 'lucide-react';
 
 interface CookieSettings {
@@ -204,9 +204,9 @@ export default function CookieConsent() {
               <div className="flex-1 pr-8 sm:pr-4">
                 <p className="text-sm text-retro-dark">
                   We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.{' '}
-                  <Link href="/cookies" className="text-retro-primary hover:text-retro-primary/80 underline">
+                  <NavLink to="/cookies" className="text-retro-primary hover:text-retro-primary/80 underline">
                     Learn more
-                  </Link>
+                  </NavLink>
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">

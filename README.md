@@ -1,143 +1,50 @@
-# Zilk - Local Deals & Rewards Platform
+# React + TypeScript + Vite
 
-Zilk is a modern platform connecting local businesses with customers through deals and interactive rewards. The platform supports both web and mobile access, featuring location-based deal discovery and an innovative spin wheel mechanism for special rewards.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Features
+Currently, two official plugins are available:
 
-- **Public Access**
-  - Browse local deals within 50 miles
-  - View constant deals without login
-  - Spin wheel for exclusive rewards (NFC activation required)
-  - Location-based deal discovery
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-- **Business Features**
-  - Comprehensive dashboard
-  - Deal management system
-  - Analytics and tracking
-  - Staff management
-  - NFC tag integration
+## Expanding the ESLint configuration
 
-## Tech Stack
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-- Frontend: Next.js + Expo
-- Backend: Supabase
-- Authentication: Supabase Auth
-- Database: PostgreSQL (via Supabase)
-- Mobile: React Native (Expo)
-- Hosting: Vercel (Web), EAS (Mobile)
+- Configure the top-level `parserOptions` property like this:
 
-## Prerequisites
-
-- Node.js 18+ and npm
-- Supabase account
-- Vercel account (for web deployment)
-- Expo account (for mobile deployment)
-- Git
-
-## Environment Setup
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd zilk
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env.local` file in the root directory:
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-
-4. Set up the database:
-   - Copy the contents of `supabase/schema.sql`
-   - Execute in your Supabase SQL editor
-
-## Development
-
-### Web Development
-```bash
-# Start the development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
+```js
+export default tseslint.config({
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
 ```
 
-### Mobile Development
-```bash
-# Start Expo development server
-npm run mobile
+- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
+- Optionally add `...tseslint.configs.stylisticTypeChecked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
-# Start for iOS
-npm run ios
+```js
+// eslint.config.js
+import react from 'eslint-plugin-react'
 
-# Start for Android
-npm run android
+export default tseslint.config({
+  // Set the react version
+  settings: { react: { version: '18.3' } },
+  plugins: {
+    // Add the react plugin
+    react,
+  },
+  rules: {
+    // other rules...
+    // Enable its recommended rules
+    ...react.configs.recommended.rules,
+    ...react.configs['jsx-runtime'].rules,
+  },
+})
 ```
-
-## Deployment
-
-### Web Deployment (Vercel)
-1. Connect your repository to Vercel
-2. Add environment variables
-3. Deploy
-
-### Mobile Deployment (EAS)
-1. Install EAS CLI:
-   ```bash
-   npm install -g eas-cli
-   ```
-
-2. Configure EAS:
-   ```bash
-   eas init
-   ```
-
-3. Build and submit:
-   ```bash
-   # Build for testing
-   eas build --platform ios
-   eas build --platform android
-
-   # Submit to stores
-   eas submit -p ios
-   eas submit -p android
-   ```
-
-## Project Structure
-
-```
-zilk/
-├── src/
-│   ├── app/                 # Next.js pages
-│   ├── components/          # Shared components
-│   └── lib/                 # Utilities and configurations
-├── supabase/
-│   └── schema.sql          # Database schema
-├── public/                  # Static assets
-└── app.config.ts           # Expo configuration
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support, email support@zilk.com or join our Slack channel.

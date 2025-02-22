@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Righteous&family=Rubik+Mono+One&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --retro-grid-size: 20px;
+    }
+
+    body {
+        @apply bg-retro-light text-retro-dark antialiased;
+        background-image: radial-gradient(rgba(27, 27, 58, 0.1) 1px, transparent 1px);
+        background-size: var(--retro-grid-size) var(--retro-grid-size);
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-display text-retro-dark;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium text-white
+        bg-retro-primary border-2 border-retro-dark rounded-lg shadow-retro
+        transition-all duration-200 ease-out;
+    }
+
+    .btn-primary:hover {
+        @apply shadow-neon-lg -translate-y-0.5;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium
+        text-retro-dark bg-white border-2 border-retro-dark rounded-lg shadow-retro
+        transition-all duration-200 ease-out;
+    }
+
+    .btn-secondary:hover {
+        @apply bg-retro-light-200 shadow-retro-lg -translate-y-0.5;
+    }
+
+    .card {
+        @apply bg-white border-2 border-retro-dark rounded-lg p-6 shadow-retro
+        transition-all duration-200 ease-out;
+    }
+
+    .card:hover {
+        @apply shadow-retro-lg;
+    }
+
+    .card-hover {
+        @apply transition-all duration-200;
+    }
+
+    .card-hover:hover {
+        @apply shadow-neon-lg -translate-y-0.5;
+    }
+
+    .input-field {
+        @apply block w-full px-4 py-2.5 text-retro-dark bg-white
+        border-2 border-retro-dark rounded-lg shadow-retro-inner
+        focus:border-retro-primary focus:ring-2 focus:ring-retro-primary/20
+        placeholder:text-retro-muted transition-all duration-200;
+    }
+
+    .label {
+        @apply block text-sm font-medium text-retro-dark mb-1.5;
+    }
+
+    .nav-link {
+        @apply inline-flex items-center px-4 py-2 text-sm font-medium text-retro-muted
+        hover:text-retro-dark hover:bg-retro-light-200 rounded-lg
+        transition-colors duration-200;
+    }
+
+    .nav-link-active {
+        @apply text-retro-dark bg-retro-light-200 font-semibold;
+    }
+}
+
+@layer utilities {
+    .bg-grid {
+        background-image: radial-gradient(rgba(27, 27, 58, 0.1) 1px, transparent 1px);
+        background-size: var(--retro-grid-size) var(--retro-grid-size);
+    }
+
+    .retro-clip {
+        clip-path: polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%);
+    }
+
+    .text-glow {
+        text-shadow: 0 0 10px rgba(233, 79, 55, 0.5);
+    }
+
+    .text-glow-blue {
+        text-shadow: 0 0 10px rgba(67, 97, 238, 0.5);
+    }
+
+    .text-glow-green {
+        text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-retro-light-200;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-retro-muted rounded-full border-2 border-retro-light-200;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-retro-dark;
+}

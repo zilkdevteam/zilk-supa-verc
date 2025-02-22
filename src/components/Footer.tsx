@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import {NavLink} from 'react-router';
 import { Facebook, Twitter, Instagram, Mail } from 'lucide-react';
 
 export default function Footer() {
@@ -19,19 +19,19 @@ export default function Footer() {
             <h4 className="text-lg font-bold">Quick Links</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/deals" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
+                <NavLink to="/deals" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
                   Browse Deals
-                </Link>
+                </NavLink>
               </li>
               <li>
-                <Link href="/spin" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
+                <NavLink to="/spin" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
                   Spin & Win
-                </Link>
+                </NavLink>
               </li>
               <li>
-                <Link href="/business" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
+                <NavLink to="/business" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
                   For Business
-                </Link>
+                </NavLink>
               </li>
             </ul>
           </div>
@@ -41,19 +41,19 @@ export default function Footer() {
             <h4 className="text-lg font-bold">Legal</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
+                <NavLink to="/privacy" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
                   Privacy Policy
-                </Link>
+                </NavLink>
               </li>
               <li>
-                <Link href="/terms" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
+                <NavLink to="/terms" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
                   Terms & Conditions
-                </Link>
+                </NavLink>
               </li>
               <li>
-                <Link href="/cookies" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
+                <NavLink to="/cookies" className="text-gray-400 hover:text-white transition-colors inline-block py-1">
                   Cookie Policy
-                </Link>
+                </NavLink>
               </li>
             </ul>
           </div>
