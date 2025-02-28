@@ -15,13 +15,17 @@ export default function BusinessPage() {
                 return;
             }
 
+            console.log(navigationType);
             // Fix for being unable to go backwards
             if(navigationType == "POP"){
                 navigate(-1);
+            }  else{
+                 // Redirect to deals page by default
+                navigate('/business/deals');
             }
 
-            // Redirect to deals page by default
-            navigate('/business/deals');
+           
+            
         };
 
         checkAuth();
